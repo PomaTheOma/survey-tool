@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Classification Survey</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+        .hidden { display: none; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; }
+        textarea { width: 100%; height: 100px; margin-bottom: 20px; }
+        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; }
+        input[type="text"] { padding: 5px; }
+    </style>
+</head>
+<body>
+
+    <!-- STEP 1: DEMOGRAPHICS -->
+    <div id="step-demographics" class="box">
+        <h2>About You</h2>
+        <p>Please select the option that best describes you:</p>
+        
+        <select id="role-select" onchange="checkOther()">
+            <option value="" disabled selected>Select an option...</option>
+            <option value="Language Teacher">Language Teacher (e.g., English, French)</option>
+            <option value="Non-Language Teacher">Teacher (Non-Language)</option>
+            <option value="Student">Student</option>
+            <option value="Other">Other</option>
+        </select>
+        
+        <div id="other-input-div" class="hidden" style="margin-top: 10px;">
+            <input type="text" id="other-text" placeholder="Please specify...">
+        </div>
+
+        <br><br>
+        <button onclick="startSurvey()">Start Survey</button>
+    </div>
+
+    <!-- STEP 2: THE PARAGRAPHS -->
+    <div id="step-survey" class="box hidden">
+        <h3>Is this text written by AI?</h3>
+        <p style="font-size: 14px; color: gray;">Question <span id="q-num">1</span> of <span id="q-total"></span></p>
+        
+        <div style="background: white; padding: 15px; border: 1px solid #ddd; margin: 20px 0; text-align: left;">
+            <p id="paragraph-text">Loading...</p>
+        </div>
+
+        <button onclick="submitAnswer('AI')">It is AI</button>
+        <button onclick="submitAnswer('NOT AI')">It is NOT AI</button>
+    </div>
+
+    <!-- STEP 3: THANK YOU -->
+    <div id="step-end" class="box hidden">
+        <h2>Thank you!</h2>
+        <p>Your responses have been recorded.</p>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // PASTE YOUR GOOGLE SCRIPT URL HERE
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxm0LiBWZ3b9MN2jRsPK4-UT1xrqDJvc8Ag_dVq9ynVg0esscD3LDst8wf-bHoQ7HQ/exec"; 
+
+        // PASTE YOUR PARAGRAPHS HERE
+        // isAI: true (means it is AI), isAI: false (means it is Human)
+        const questions = [
+            { text: "The cat sat on the mat. It was a sunny day.", isAI: false },
+            { text: "In the realm of digital cognition, neural networks optimize...", isAI: true },
+            { text: "I went to the store and bought some milk.", isAI: false }
+        ];
+
+        // --- LOGIC ---
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let demographics = {};
+
+        function checkOther() {
+            const role = document.getElementById("role-select").value;
+            const otherDiv = document.getElementById("other-input-div");
+            if (role === "Other") {
+                otherDiv.classList.remove("hidden");
+            } else {
+                otherDiv.classList.add("hidden");
+            }
+        }
+
+        function startSurvey() {
+            const role = document.getElementById("role-select").value;
+            const otherText = document.getElementById("other-text").value;
+
+            if (!role) { alert("Please select an option."); return; }
+            if (role === "Other" && !otherText) { alert("Please specify 'Other'."); return; }
+
+            demographics = {
+                role: role,
+                otherDetail: role === "Other" ? otherText : ""
+            };
+
+            document.getElementById("step-demographics").classList.add("hidden");
+            document.getElementById("step-survey").classList.remove("hidden");
+            document.getElementById("q-total").innerText = questions.length;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestionIndex];
+            document.getElementById("paragraph-text").innerText = q.text;
+            document.getElementById("q-num").innerText = currentQuestionIndex + 1;
+        }
+
+        function submitAnswer(selection) {
+            const q = questions[currentQuestionIndex];
+            
+            // Record answer
+            const isCorrect = (selection === 'AI' && q.isAI) || (selection === 'NOT AI' && !q.isAI);
+            
+            userAnswers.push({
+                questionIndex: currentQuestionIndex,
+                selection: selection,
+                correct: isCorrect
+            });
+
+            // Next question or Finish
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                finishSurvey();
+            }
+        }
+
+        function finishSurvey() {
+            document.getElementById("step-survey").classList.add("hidden");
+            document.getElementById("step-end").classList.remove("hidden");
+
+            // Calculate Results
+            let correctCount = userAnswers.filter(a => a.correct).length;
+            let percentage = (correctCount / questions.length) * 100;
+
+            // Prepare payload
+            const payload = {
+                role: demographics.role,
+                otherDetail: demographics.otherDetail,
+                answers: userAnswers,
+                score: correctCount,
+                percentage: percentage + "%"
+            };
+
+            // Send to Google Sheet
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                console.log("Data sent");
+            }).catch(err => console.error(err));
+        }
+    </script>
+</body>
+</html>
