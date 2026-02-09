@@ -15,42 +15,42 @@
 
     <!-- STEP 1: DEMOGRAPHICS -->
     <div id="step-demographics" class="box">
-        <h2>About You</h2>
-        <p>Please select the option that best describes you:</p>
+        <h2>Über sie</h2>
+        <p>Bitte auswählen was sie am besten beschreibt:</p>
         
         <select id="role-select" onchange="checkOther()">
-            <option value="" disabled selected>Select an option...</option>
-            <option value="Language Teacher">Language Teacher (e.g., English, French)</option>
-            <option value="Non-Language Teacher">Teacher (Non-Language)</option>
-            <option value="Student">Student</option>
-            <option value="Other">Other</option>
+            <option value="" disabled selected>Wählen sie etwas aus...</option>
+            <option value="Language Teacher">Lehrer einer Sprache (z.B., Englissh, Französisch)</option>
+            <option value="Non-Language Teacher">Lehrer keiner Sprache</option>
+            <option value="Student">Schüler</option>
+            <option value="Other">Was anderes</option>
         </select>
         
         <div id="other-input-div" class="hidden" style="margin-top: 10px;">
-            <input type="text" id="other-text" placeholder="Please specify...">
+            <input type="text" id="other-text" placeholder="Bitte genauer:">
         </div>
 
         <br><br>
-        <button onclick="startSurvey()">Start Survey</button>
+        <button onclick="startSurvey()">Test beginnen</button>
     </div>
 
     <!-- STEP 2: THE PARAGRAPHS -->
     <div id="step-survey" class="box hidden">
-        <h3>Is this text written by AI?</h3>
-        <p style="font-size: 14px; color: gray;">Question <span id="q-num">1</span> of <span id="q-total"></span></p>
+        <h3>Ist folgender Text von KI generiert?</h3>
+        <p style="font-size: 14px; color: gray;">Frage <span id="q-num">1</span> of <span id="q-total"></span></p>
         
         <div style="background: white; padding: 15px; border: 1px solid #ddd; margin: 20px 0; text-align: left;">
-            <p id="paragraph-text">Loading...</p>
+            <p id="paragraph-text">Lädt</p>
         </div>
 
-        <button onclick="submitAnswer('AI')">It is AI</button>
-        <button onclick="submitAnswer('NOT AI')">It is NOT AI</button>
+        <button onclick="submitAnswer('AI')">KI</button>
+        <button onclick="submitAnswer('NOT AI')">nicht KI</button>
     </div>
 
     <!-- STEP 3: THANK YOU -->
     <div id="step-end" class="box hidden">
-        <h2>Thank you!</h2>
-        <p>Your responses have been recorded.</p>
+        <h2>Danke</h2>
+        <p>Ihre Antwort wurde gespeichert</p>
     </div>
 
     <script>
