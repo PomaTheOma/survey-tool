@@ -21,6 +21,7 @@
         button:hover { background-color: #0056b3; }
         .box { border: 1px solid #ddd; padding: 30px; border-radius: 12px; background: #f9f9f9; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         select, input[type="text"] { padding: 10px; font-size: 16px; width: 80%; margin-top: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        label { font-weight: bold; display: block; margin-top: 15px; text-align: left; width: 80%; margin-left: auto; margin-right: auto; }
         .text-display {
             background: white; 
             padding: 20px; 
@@ -29,18 +30,28 @@
             text-align: left; 
             line-height: 1.6;
             font-size: 17px;
-            white-space: pre-wrap; /* Keeps paragraphs/formatting */
+            white-space: pre-wrap; 
         }
         h2 { margin-top: 0; }
+        .hint { font-size: 0.85em; color: #666; margin-top: 5px; font-weight: normal; }
     </style>
 </head>
 <body>
 
     <!-- STEP 1: DEMOGRAPHICS (GERMAN) -->
     <div id="step-demographics" class="box">
-        <h2>Über Dich</h2>
-        <p>Bitte wähle die Option, die am besten auf dich zutrifft:</p>
+        <h2>Willkommen</h2>
+        <p>Bitte fülle kurz diese Angaben aus, bevor es losgeht.</p>
         
+        <!-- NEUES FELD: NAME -->
+        <label for="user-name">Wer sind Sie?</label>
+        <p class="hint" style="width: 80%; margin: 0 auto 5px auto; text-align: left;">
+            (Muss nicht Ihr echter Name sein – nur damit wir Sie erkennen, falls wir uns kennen)
+        </p>
+        <input type="text" id="user-name" placeholder="Name oder Kennung...">
+
+        <!-- ROLLE -->
+        <label for="role-select">In welcher Funktion nehmen Sie teil?</label>
         <select id="role-select" onchange="checkOther()">
             <option value="" disabled selected>Bitte auswählen...</option>
             <option value="Language Teacher">Sprachlehrer/in (z.B. Englisch, Deutsch, Französisch)</option>
@@ -50,7 +61,7 @@
         </select>
         
         <div id="other-input-div" class="hidden" style="margin-top: 10px;">
-            <input type="text" id="other-text" placeholder="Bitte hier eingeben...">
+            <input type="text" id="other-text" placeholder="Bitte hier spezifizieren...">
         </div>
 
         <br><br>
@@ -130,13 +141,17 @@ Also fasste sie schnell einen Plan.`,
         }
 
         function startSurvey() {
+            const name = document.getElementById("user-name").value; // Get Name
             const role = document.getElementById("role-select").value;
             const otherText = document.getElementById("other-text").value;
 
-            if (!role) { alert("Bitte wähle eine Option aus."); return; }
-            if (role === "Other" && !otherText) { alert("Bitte gib an, was mit 'Sonstiges' gemeint ist."); return; }
+            // VALIDATION
+            if (!name) { alert("Bitte geben Sie einen Namen oder eine Kennung ein."); return; }
+            if (!role) { alert("Bitte wählen Sie eine Rolle aus."); return; }
+            if (role === "Other" && !otherText) { alert("Bitte geben Sie an, was mit 'Sonstiges' gemeint ist."); return; }
 
             demographics = {
+                name: name,
                 role: role,
                 otherDetail: role === "Other" ? otherText : ""
             };
@@ -164,7 +179,7 @@ Also fasste sie schnell einen Plan.`,
                 questionIndex: currentQuestionIndex,
                 selection: selection,
                 correct: isCorrect,
-                isAI_actual: q.isAI // Saving what it actually was for reference
+                isAI_actual: q.isAI
             });
 
             // Next question or Finish
@@ -186,6 +201,7 @@ Also fasste sie schnell einen Plan.`,
 
             // Prepare payload
             const payload = {
+                name: demographics.name, // NEW FIELD
                 role: demographics.role,
                 otherDetail: demographics.otherDetail,
                 answers: userAnswers,
@@ -194,7 +210,7 @@ Also fasste sie schnell einen Plan.`,
             };
 
             // Send to Google Sheet
-            if(GOOGLE_SCRIPT_URL.includes("HIER_DEINE")) {
+            if(GOOGLE_SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbxm0LiBWZ3b9MN2jRsPK4-UT1xrqDJvc8Ag_dVq9ynVg0esscD3LDst8wf-bHoQ7HQ/exec")) {
                 console.error("URL nicht gesetzt!");
                 alert("Fehler: Die Datenbank-URL wurde nicht im Code hinterlegt.");
                 return;
@@ -202,7 +218,7 @@ Also fasste sie schnell einen Plan.`,
 
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Important for Google Script
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             }).then(() => {
